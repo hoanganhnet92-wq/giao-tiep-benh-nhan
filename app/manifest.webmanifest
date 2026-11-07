@@ -1,10 +1,10 @@
 {
-  "id": "./?app=gtbn2",
+  "id": "./",
   "name": "Giao tiếp với bệnh nhân",
   "short_name": "Giao tiếp BN",
   "lang": "vi",
   "description": "Khóa học mini tiếng Anh giao tiếp với bệnh nhân",
-  "start_url": "./?app=gtbn2",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
