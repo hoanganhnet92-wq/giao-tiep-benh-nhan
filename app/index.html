@@ -392,7 +392,7 @@ function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(M
 
 /* ===== PHÁT ÂM ===== */
 function ttsOk(){return ('speechSynthesis' in window)&&('SpeechSynthesisUtterance' in window);}
-function fallbackListen(t){try{window.open("https://youglish.com/pronounce/"+encodeURIComponent(t)+"/english/us","_blank","noopener");}catch(e){}}
+function fallbackListen(t){} /* không mở trang ngoài khi máy không đọc được */
 function doSpeak(text){
   if(speechSynthesis.speaking||speechSynthesis.pending)speechSynthesis.cancel();
   try{speechSynthesis.resume();}catch(e){}
@@ -403,7 +403,6 @@ function doSpeak(text){
   var started=false;u.onstart=function(){started=true;};
   u.onerror=function(){fallbackListen(text);};
   speechSynthesis.speak(u);
-  setTimeout(function(){if(!started&&!speechSynthesis.speaking)fallbackListen(text);},1500);
 }
 function speak(text){
   if(!ttsOk()){fallbackListen(text);return;}
