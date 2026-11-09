@@ -155,6 +155,40 @@ svg{flex:none}
 
 button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
 @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* ôn tập kiểu Anki */
+.srs-intro{margin:0 0 14px;color:var(--muted);font-size:.95rem;line-height:1.55;max-width:62ch}
+.decks{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.deck{display:flex;align-items:center;gap:10px;width:100%;border:none;border-bottom:1px solid var(--line);background:var(--surface);
+  padding:14px 14px;text-align:left;cursor:pointer;font-size:1rem}
+.deck:last-child{border-bottom:none}
+.deck:active{background:var(--tile)}
+.deck .dn{flex:1;min-width:0;font-weight:600}
+.deck.all .dn{color:var(--blue)}
+.cnt{display:flex;gap:10px;font-variant-numeric:tabular-nums;font-weight:700;font-size:.95rem}
+.c-new{color:var(--blue)}.c-lrn{color:var(--red)}.c-rev{color:var(--green)}
+.cnt .z{opacity:.28}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:.8rem;color:var(--muted)}
+.legend b{font-weight:700}
+.rv-top{display:flex;justify-content:center;gap:18px;padding-top:6px;font-size:1.05rem}
+.rv-top span{font-variant-numeric:tabular-nums;font-weight:700}
+.rv-top .on{text-decoration:underline;text-underline-offset:4px}
+.rcard{background:var(--surface);border-radius:18px;padding:26px 20px;display:flex;flex-direction:column;gap:10px;align-items:center;text-align:center;min-height:300px;justify-content:center}
+.rcard .qen{text-align:center}
+.rdiv{width:100%;border:none;border-top:1px solid var(--line);margin:6px 0}
+.rmean{font-size:1.3rem;font-weight:600;color:var(--blue);text-wrap:balance}
+.rcard .exbox{text-align:left}
+.grades{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.grade{border:none;border-radius:12px;padding:10px 4px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;font-weight:700;font-size:.95rem}
+.grade small{font-weight:600;font-size:.74rem;opacity:.85;font-variant-numeric:tabular-nums}
+.g-again{background:var(--soft-red);color:var(--red)}
+.g-hard{background:var(--tile);color:var(--ink)}
+.g-good{background:var(--soft-green);color:var(--green)}
+.g-easy{background:var(--soft-blue);color:var(--blue)}
+.grade:active{filter:brightness(.93)}
+.rdone{padding-top:40px;text-align:center;display:flex;flex-direction:column;gap:14px}
+.rdone h2{margin:0;font-size:1.5rem}
+.rdone p{margin:0;color:var(--muted)}
 </style>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap">
 
@@ -183,6 +217,13 @@ button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
         <div class="tile"><span class="l ic-purple"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3"/></svg><span style="color:var(--ink)">Độ chính xác</span></span><span class="v" id="t-acc">0%</span></div>
         <div class="tile"><span class="l ic-gray"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg><span style="color:var(--ink)">Chưa mở</span></span><span class="v" id="t-unopened">120</span></div>
       </div>
+    </div>
+
+    <div class="sec pad">
+      <h2>Ôn tập kiểu Anki</h2>
+      <p class="srs-intro">Mỗi phần 20 thẻ. Xem mặt trước, tự nhớ, bấm hiện đáp án rồi tự chấm. Thẻ nhớ kém sẽ quay lại sớm, thẻ nhớ tốt được giãn ra nhiều ngày sau.</p>
+      <div class="decks" id="decks"></div>
+      <div class="legend"><span><b class="c-new">Xanh dương</b> thẻ mới</span><span><b class="c-lrn">Đỏ</b> đang học</span><span><b class="c-rev">Xanh lá</b> đến hạn ôn</span></div>
     </div>
 
     <button class="linkrow pad" id="open-list">Mở danh sách thuật ngữ
@@ -218,6 +259,15 @@ button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
   </div>
 
   <!-- TỔNG KẾT -->
+  <div class="view" id="v-review" hidden>
+    <div class="sbar pad">
+      <button class="ibtn" id="rv-close" aria-label="Thoát ôn tập"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <h1 id="rv-title" style="margin:0;font-size:1.05rem;font-weight:700;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Ôn tập</h1>
+    </div>
+    <div class="qwrap pad" id="rv-body"></div>
+    <div class="cta" id="rv-cta" hidden><div class="pad" id="rv-actions"></div></div>
+  </div>
+
   <div class="view" id="v-summary" hidden>
     <div class="bar pad"><h1>Kết quả lượt học</h1></div>
     <div class="sum pad" id="sum-body"></div>
@@ -415,7 +465,7 @@ var SPK='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="cur
 
 /* ===== ĐIỀU HƯỚNG ===== */
 function show(name){
-  ['home','list','session','summary'].forEach(function(v){$('v-'+v).hidden=(v!==name);});
+  ['home','list','session','summary','review'].forEach(function(v){$('v-'+v).hidden=(v!==name);});
   window.scrollTo(0,0);
 }
 
@@ -424,6 +474,7 @@ function renderHome(){
   var s=stats();
   $('t-learned').textContent=s.learned;$('t-learning').textContent=s.learning;
   $('t-acc').textContent=s.acc+'%';$('t-unopened').textContent=s.unopened;
+  renderDecks();
 }
 
 /* ===== DANH SÁCH THUẬT NGỮ ===== */
@@ -606,7 +657,7 @@ var armed=false,armT=null;
 $('reset').addEventListener('click',function(){
   var b=this;
   if(!armed){armed=true;b.textContent='Bấm lại để xác nhận xóa';clearTimeout(armT);armT=setTimeout(function(){armed=false;b.textContent='Đặt lại tiến độ';},3500);return;}
-  prog={};save();armed=false;b.textContent='Đặt lại tiến độ';renderHome();
+  prog={};save();srs={};ssave();armed=false;b.textContent='Đặt lại tiến độ';renderHome();
 });
 var tbtn=$('theme');
 var SUN='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
@@ -620,10 +671,153 @@ tbtn.addEventListener('click',function(){var n=curTheme()==='dark'?'light':'dark
   document.documentElement.setAttribute('data-theme',n);try{localStorage.setItem('gtbn_theme',n);}catch(e){}syncIcon();});
 
 if(ttsOk())speechSynthesis.getVoices();
+/* ===== ÔN TẬP KIỂU ANKI (lặp lại ngắt quãng, kiểu SM-2) =====
+   Bước học: 1 phút, 10 phút. Tốt nghiệp: 1 ngày (Dễ: 4 ngày).
+   Thẻ đã thuộc: Khó ×1,2 · Tốt ×độ dễ · Dễ ×độ dễ×1,3. Quên: học lại 10 phút, khoảng cách còn một nửa. */
+var SKEY="gtbn_srs_v1", srs={};
+try{srs=JSON.parse(localStorage.getItem(SKEY)||"{}")||{};}catch(e){srs={};}
+function ssave(){try{localStorage.setItem(SKEY,JSON.stringify(srs));}catch(e){}}
+var MIN=60000, DAY=86400000, STEPS=[1,10], RSTEP=10, LEARN_AHEAD=20*MIN;
+function card(id){return srs[id]||{q:'new',step:0,ivl:0,ease:2.5,due:0,reps:0,lapses:0};}
+function dayEnd(){var d=new Date();d.setHours(23,59,59,999);return d.getTime();}
+function counts(ids){var now=Date.now(),de=dayEnd(),n=0,l=0,r=0;
+  ids.forEach(function(id){var c=card(id);
+    if(c.q==='new')n++;
+    else if(c.q==='learn'||c.q==='relearn'){if(c.due<=now+LEARN_AHEAD)l++;}
+    else if(c.due<=de)r++;});
+  return {n:n,l:l,r:r};}
+function idsOf(g){return ITEMS.filter(function(it){return g==='all'||it.g===g;}).map(function(it){return it.id;});}
+function cnum(v,cls){return '<span class="'+cls+(v?'':' z')+'">'+v+'</span>';}
+function renderDecks(){
+  var el=$('decks');if(!el)return;
+  var html='';
+  GROUPS.forEach(function(gn,gi){var c=counts(idsOf(gi));
+    html+='<button class="deck" data-g="'+gi+'"><span class="dn">'+esc(gn)+'</span><span class="cnt">'+cnum(c.n,'c-new')+cnum(c.l,'c-lrn')+cnum(c.r,'c-rev')+'</span></button>';});
+  var a=counts(idsOf('all'));
+  html+='<button class="deck all" data-g="all"><span class="dn">Ôn tất cả các phần</span><span class="cnt">'+cnum(a.n,'c-new')+cnum(a.l,'c-lrn')+cnum(a.r,'c-rev')+'</span></button>';
+  el.innerHTML=html;
+}
+$('decks').addEventListener('click',function(e){var b=e.target.closest('.deck');if(!b)return;
+  var g=b.getAttribute('data-g');startReview(g==='all'?'all':parseInt(g,10));});
+
+function fmtIvl(ms){
+  if(ms<60*MIN)return Math.max(1,Math.round(ms/MIN))+' phút';
+  if(ms<DAY*0.9)return Math.round(ms/(60*MIN))+' giờ';
+  var d=ms/DAY; if(d<30)return Math.round(d)+' ngày';
+  if(d<365)return (Math.round(d/30*10)/10)+' tháng';
+  return (Math.round(d/365*10)/10)+' năm';
+}
+/* trả về thẻ mới sau khi chấm: 1 Lại, 2 Khó, 3 Tốt, 4 Dễ */
+function schedule(c0,g,now){
+  var c=JSON.parse(JSON.stringify(c0));
+  if(c.q==='new'){c.q='learn';c.step=0;}
+  if(c.q==='learn'){
+    if(g===1){c.step=0;c.due=now+STEPS[0]*MIN;}
+    else if(g===2){var cur=STEPS[c.step],nx=STEPS[c.step+1]||cur*1.5;c.due=now+Math.round((cur+(c.step===0?nx:cur))/2)*MIN;}
+    else if(g===3){if(c.step+1<STEPS.length){c.step++;c.due=now+STEPS[c.step]*MIN;}else{c.q='review';c.ivl=1;c.due=now+DAY;}}
+    else{c.q='review';c.ivl=4;c.due=now+4*DAY;}
+  }else if(c.q==='relearn'){
+    if(g===1){c.due=now+RSTEP*MIN;}
+    else if(g===2){c.due=now+Math.round(RSTEP*1.5)*MIN;}
+    else{c.q='review';if(g===4)c.ivl=Math.max(c.ivl+1,Math.round(c.ivl*1.5));c.due=now+c.ivl*DAY;}
+  }else{
+    if(g===1){c.lapses++;c.ease=Math.max(1.3,c.ease-0.2);c.ivl=Math.max(1,Math.round(c.ivl*0.5));c.q='relearn';c.due=now+RSTEP*MIN;}
+    else{var ni;
+      if(g===2){ni=c.ivl*1.2;c.ease=Math.max(1.3,c.ease-0.15);}
+      else if(g===3){ni=c.ivl*c.ease;}
+      else{ni=c.ivl*c.ease*1.3;c.ease+=0.15;}
+      ni=Math.max(c.ivl+1,Math.round(ni));
+      if(g===4){var good=Math.max(c.ivl+1,Math.round(c.ivl*(c.ease-0.15)));ni=Math.max(ni,good+1);}
+      c.ivl=ni;c.due=now+ni*DAY;}
+  }
+  c.reps++;return c;
+}
+
+var R=null;
+function startReview(g){
+  R={g:g,ids:idsOf(g),done:0,again:0,cur:null,shown:false};
+  $('rv-title').textContent=(g==='all'?'Ôn tất cả các phần':GROUPS[g]);
+  show('review');nextCard();
+}
+function pickNext(){
+  var now=Date.now(),de=dayEnd(),lrn=[],rev=[],nw=[];
+  R.ids.forEach(function(id){var c=card(id);
+    if(c.q==='new')nw.push(id);
+    else if(c.q==='learn'||c.q==='relearn')lrn.push(id);
+    else if(c.due<=de)rev.push(id);});
+  lrn.sort(function(a,b){return card(a).due-card(b).due;});
+  if(lrn.length&&card(lrn[0]).due<=now)return lrn[0];
+  if(rev.length){rev.sort(function(a,b){return card(a).due-card(b).due;});return rev[0];}
+  if(nw.length)return nw[0];
+  if(lrn.length&&card(lrn[0]).due<=now+LEARN_AHEAD)return lrn[0];
+  return null;
+}
+function topCounts(curId){
+  var c=counts(R.ids),cc=curId!=null?card(curId).q:null;
+  var cls=function(q){return q==='new'?'n':(q==='review'?'r':'l');}(cc);
+  return '<div class="rv-top"><span class="c-new'+(cls==='n'?' on':'')+'">'+c.n+'</span><span class="c-lrn'+(cls==='l'?' on':'')+'">'+c.l+'</span><span class="c-rev'+(cls==='r'?' on':'')+'">'+c.r+'</span></div>';
+}
+function nextCard(){
+  var id=pickNext();
+  if(id==null){reviewDone();return;}
+  R.cur=id;R.shown=false;
+  var it=ITEMS[id];
+  $('rv-body').innerHTML=topCounts(id)+
+    '<div class="rcard"><span class="qlabel">'+(it.t==='P'?'Câu mẫu':'Từ vựng')+'</span>'+
+    '<div class="qen">'+esc(it.e)+'</div>'+
+    '<button class="spk" data-say="'+esc(it.e)+'">'+SPK+' Nghe</button>'+
+    '<div id="rv-back" hidden style="width:100%;display:flex;flex-direction:column;gap:10px;align-items:center"></div></div>';
+  $('rv-actions').innerHTML='<button class="btn" id="rv-show">Hiện đáp án</button>';
+  $('rv-cta').hidden=false;
+  $('rv-show').onclick=showAnswer;
+  speak(it.e);
+  window.scrollTo(0,0);
+}
+function showAnswer(){
+  if(!R||R.shown)return;R.shown=true;
+  var it=ITEMS[R.cur],c=card(R.cur),now=Date.now();
+  var back=$('rv-back');
+  back.innerHTML='<hr class="rdiv">'+(it.ipa?'<span class="ipa">'+esc(it.ipa)+'</span>':'')+
+    '<div class="rmean">'+esc(it.m)+'</div>'+
+    '<div class="exbox"><span class="exen">'+esc(it.ex)+'</span><span class="exvi">'+esc(it.exm)+'</span>'+
+    '<button class="spk" data-say="'+esc(it.ex)+'">'+SPK+' Nghe ví dụ</button></div>';
+  back.hidden=false;
+  var lab=['Lại','Khó','Tốt','Dễ'],cls=['g-again','g-hard','g-good','g-easy'],h='<div class="grades">';
+  for(var g=1;g<=4;g++){var nc=schedule(c,g,now);
+    h+='<button class="grade '+cls[g-1]+'" data-g="'+g+'">'+lab[g-1]+'<small>'+fmtIvl(nc.due-now)+'</small></button>';}
+  $('rv-actions').innerHTML=h+'</div>';
+  $('rv-actions').querySelector('.grades').onclick=function(e){var b=e.target.closest('.grade');if(b)grade(parseInt(b.getAttribute('data-g'),10));};
+}
+function grade(g){
+  if(!R||!R.shown)return;
+  srs[R.cur]=schedule(card(R.cur),g,Date.now());ssave();
+  R.done++;if(g===1)R.again++;
+  nextCard();
+}
+function reviewDone(){
+  var now=Date.now(),soon=null;
+  R.ids.forEach(function(id){var c=card(id);if(c.q!=='new'&&(soon===null||c.due<soon))soon=c.due;});
+  var nextTxt=soon?('Lần ôn tiếp theo của phần này: sau '+fmtIvl(Math.max(MIN,soon-now))+'.'):'';
+  $('rv-body').innerHTML='<div class="rdone"><h2>'+(R.done?'Xong lượt ôn hôm nay':'Chưa có thẻ nào đến hạn')+'</h2>'+
+    (R.done?'<p>Đã ôn '+R.done+' lượt thẻ, bấm "Lại" '+R.again+' lần.</p>':'')+'<p>'+nextTxt+'</p></div>';
+  $('rv-actions').innerHTML='<button class="btn" id="rv-home">Về trang chính</button>';
+  $('rv-home').onclick=function(){R=null;renderHome();show('home');};
+  $('rv-cta').hidden=false;
+}
+$('rv-body').addEventListener('click',function(e){var sp=e.target.closest('.spk');if(sp){speak(sp.getAttribute('data-say'));return;}
+  if(R&&!R.shown&&e.target.closest('.rcard'))showAnswer();});
+$('rv-close').addEventListener('click',function(){R=null;renderHome();show('home');});
+document.addEventListener('keydown',function(e){
+  if(!R||$('v-review').hidden)return;
+  if(!R.shown&&(e.key===' '||e.key==='Enter')){e.preventDefault();showAnswer();}
+  else if(R.shown&&/^[1-4]$/.test(e.key))grade(parseInt(e.key,10));
+  else if(R.shown&&e.key===' '){e.preventDefault();grade(3);}
+});
+document.addEventListener('visibilitychange',function(){if(!document.hidden&&!$('v-home').hidden)renderDecks();});
+
 renderHome();
 })();
 </script>
-
 <script>
 if("serviceWorker" in navigator && /^https?:/.test(location.protocol)){
   window.addEventListener("load", function(){ navigator.serviceWorker.register("sw.js").catch(function(){}); });
