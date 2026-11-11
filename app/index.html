@@ -896,7 +896,7 @@ function fRender(){
     '<div class="fhint" id="f-hint">'+(q.ans.length+' chữ cái')+'</div>'+
     '<input class="fin" id="f-in" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Gõ từ còn thiếu">'+
     '<div id="f-msg" class="fmsg"></div>'+
-    '<div class="fact" id="f-act"><button class="btn sec2" id="f-hbtn">Gợi ý</button><button class="btn sec2" id="f-skip">Không nhớ</button><button class="btn" id="f-ok">Kiểm tra</button></div></div>';
+    '<div class="fact" id="f-act"><button class="btn" id="f-ok" style="flex-basis:100%">Kiểm tra</button><button class="btn sec2" id="f-hbtn">Gợi ý</button><button class="btn sec2" id="f-skip">Không nhớ</button></div></div>';
   var inp=$('f-in');try{inp.focus({preventScroll:true});}catch(e){}
 }
 function fHint(){if(F.done)return;var q=F.q[F.i];F.used=true;F.hint=Math.min(q.ans.length-1,F.hint+1);
@@ -927,7 +927,8 @@ function fCheck(){
   }
 }
 function fSkip(){
-  if(F.done)return;var q=F.q[F.i];F.wrong++;fApply(q.id,false);
+  if(F.done)return;var q=F.q[F.i];
+  var tv=fnorm($('f-in').value);if(tv&&[q.ans].concat(q.alts).map(fnorm).indexOf(tv)>=0)return fCheck();F.wrong++;fApply(q.id,false);
   $('f-msg').className='fmsg bad';$('f-msg').textContent='Đáp án: '+q.ans;fReveal(false);
   F.q.splice(Math.min(F.q.length,F.i+5),0,Object.assign({},q));
 }
