@@ -1,7 +1,7 @@
 /* Giao tiếp BN — chạy offline.
    Trang chính: lấy bản mới từ mạng trước, mất mạng thì dùng bản đã lưu.
    Icon/manifest/font: dùng bản đã lưu. */
-const CACHE = "gtbn-app-v1";
+const CACHE = "gtbn-app-v2";
 const CORE = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png",
   "./icon-maskable-192.png", "./icon-maskable-512.png", "./apple-touch-icon.png"];
 
