@@ -159,6 +159,7 @@ button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
 /* điền từ */
 .fq{background:var(--surface);border-radius:18px;padding:22px 18px;display:flex;flex-direction:column;gap:14px}
 .fvi{font-size:1.05rem;font-weight:600;line-height:1.5}
+.fterm{color:var(--muted);font-size:.95rem}.fterm b{color:var(--ink)}
 .fsent{font-size:1.28rem;line-height:1.7;font-weight:600}
 .blank{display:inline-block;min-width:3.2em;border-bottom:3px solid var(--blue);color:var(--blue);text-align:center;padding:0 4px;letter-spacing:.08em}
 .blank.ok{border-color:var(--green);color:var(--green)}.blank.bad{border-color:var(--red);color:var(--red)}
@@ -874,9 +875,11 @@ function mkFill(it){
     if(!best){re=/[A-Za-z']+/g;while((w=re.exec(txt))){if(!best||w[0].length>best[0].length)best=[w[0],w.index];}}
     ans=best[0];pre=txt.slice(0,best[1]);post=txt.slice(best[1]+ans.length);alts=[];
   }
+  var SYN={medicine:['medication'],medication:['medicine'],small:['little','slight','quick'],tests:['test'],'test results':['test result']};
+  (SYN[ans.toLowerCase()]||[]).forEach(function(x){alts.push(x);});
   return {id:it.id,pre:pre,ans:ans,post:post,alts:alts,vi:vi,term:(it.t==='T'?it.m:null)};
 }
-function fnorm(x){return String(x).toLowerCase().replace(/[’]/g,"'").replace(/[^a-z0-9' ]/g,'').replace(/\s+/g,' ').trim();}
+function fnorm(x){return String(x).toLowerCase().replace(/[’]/g,"'").replace(/-/g,' ').replace(/[^a-z0-9' ]/g,'').replace(/\s+/g,' ').trim().replace(/ /g,'');}
 var F=null;
 function startFill(g){
   var ids=idsOf(g);
@@ -891,7 +894,7 @@ function fRender(){
   var q=F.q[F.i];F.hint=0;F.used=false;F.done=false;
   $('f-bar').style.width=Math.round(100*F.i/F.q.length)+'%';
   $('f-count').textContent=(F.i+1)+'/'+F.q.length;
-  b.innerHTML='<div class="fq"><div class="qlabel">Điền từ còn thiếu</div><div class="fvi">'+esc(q.vi)+'</div>'+
+  b.innerHTML='<div class="fq"><div class="qlabel">Điền từ còn thiếu</div><div class="fvi">'+esc(q.vi)+'</div>'+(q.term?'<div class="fterm">Từ cần điền có nghĩa: <b>'+esc(q.term)+'</b></div>':'')+
     '<div class="fsent">'+esc(q.pre)+'<span class="blank" id="f-blank">'+'&nbsp;'.repeat(3)+'</span>'+esc(q.post)+'</div>'+
     '<div class="fhint" id="f-hint">'+(q.ans.length+' chữ cái')+'</div>'+
     '<input class="fin" id="f-in" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Gõ từ còn thiếu">'+
@@ -906,7 +909,7 @@ function fReveal(good){
   var q=F.q[F.i];F.done=true;
   var bl=$('f-blank'),inp=$('f-in');
   bl.textContent=q.ans;bl.className='blank '+(good?'ok':'bad');inp.className='fin '+(good?'ok':'bad');inp.disabled=true;
-  $('f-hint').textContent=q.term?('Từ vựng: '+q.ans+(q.term?' — '+q.term:'')):'';
+  $('f-hint').textContent=q.term?('Từ vựng: '+q.ans+' — '+q.term):'';
   $('f-act').innerHTML='<button class="btn" id="f-next">Tiếp tục</button>';
   $('f-next').focus();
 }
