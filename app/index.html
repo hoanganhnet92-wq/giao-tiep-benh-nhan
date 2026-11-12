@@ -159,6 +159,8 @@ button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
 /* điền từ */
 .fq{background:var(--surface);border-radius:18px;padding:22px 18px;display:flex;flex-direction:column;gap:14px}
 .fvi{font-size:1.05rem;font-weight:600;line-height:1.5}
+.fknown{display:flex;align-items:center;gap:12px;padding:6px 0 0;font-size:1rem;cursor:pointer}
+.fknown input{width:24px;height:24px;accent-color:var(--blue);flex:none}
 .fterm{color:var(--muted);font-size:.95rem}.fterm b{color:var(--ink)}
 .fsent{font-size:1.28rem;line-height:1.7;font-weight:600}
 .blank{display:inline-block;min-width:3.2em;border-bottom:3px solid var(--blue);color:var(--blue);text-align:center;padding:0 4px;letter-spacing:.08em}
@@ -235,6 +237,7 @@ button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
     <div class="sec pad">
       <h2>Ôn tập</h2>
       <div class="seg" id="rmode"><button data-m="anki" class="on">Thẻ Anki</button><button data-m="fill">Điền từ</button></div>
+      <div class="seg" id="fscope" hidden><button data-s="wrong">Từ sai</button><button data-s="all">Học cả</button></div>
       <p class="srs-intro" id="srs-intro"></p>
       <div class="decks" id="decks"></div>
       <div class="legend" id="srs-legend"><span><b class="c-new">Xanh dương</b> thẻ mới</span><span><b class="c-lrn">Đỏ</b> đang học</span><span><b class="c-rev">Xanh lá</b> đến hạn ôn</span></div>
@@ -710,22 +713,30 @@ function counts(ids){var now=Date.now(),de=dayEnd(),n=0,l=0,r=0;
   return {n:n,l:l,r:r};}
 function idsOf(g){return ITEMS.filter(function(it){return g==='all'||it.g===g;}).map(function(it){return it.id;});}
 function cnum(v,cls){return '<span class="'+cls+(v?'':' z')+'">'+v+'</span>';}
-var FKEY="gtbn_fill_v1", fillst={}, RMODE='anki';
+var FKEY="gtbn_fill_v1", fillst={}, RMODE='anki', FSCOPE='all';
 try{fillst=JSON.parse(localStorage.getItem(FKEY)||"{}")||{};}catch(e){fillst={};}
-try{RMODE=localStorage.getItem('gtbn_rmode')==='fill'?'fill':'anki';}catch(e){}
+try{RMODE=localStorage.getItem('gtbn_rmode')==='fill'?'fill':'anki';FSCOPE=localStorage.getItem('gtbn_fscope')==='wrong'?'wrong':'all';}catch(e){}
+(function(){var ch=false;Object.keys(fillst).forEach(function(k){var x=fillst[k];if(x&&x.w===undefined){x.w=(x.n>0&&!x.s)?1:0;x.k=x.k||0;ch=true;}});if(ch)fsave();})();
 function fsave(){try{localStorage.setItem(FKEY,JSON.stringify(fillst));}catch(e){}}
-function fmastered(id){return (fillst[id]&&fillst[id].s>=2)?1:0;}
+function isKnown(id){return !!(fillst[id]&&fillst[id].k);}
+function isWeak(id){var x=fillst[id];return !!(x&&x.w&&!x.k);}
+function fcnt(id){return (fillst[id]&&fillst[id].s)||0;}
+function fcounts(ids){var w=0,k=0;ids.forEach(function(id){if(isWeak(id))w++;if(isKnown(id))k++;});return {w:w,k:k};}
 function renderDecks(){
   var el=$('decks');if(!el)return;
   Array.prototype.forEach.call(document.querySelectorAll('#rmode button'),function(b){b.classList.toggle('on',b.getAttribute('data-m')===RMODE);});
+  Array.prototype.forEach.call(document.querySelectorAll('#fscope button'),function(b){b.classList.toggle('on',b.getAttribute('data-s')===FSCOPE);});
+  $('fscope').hidden=(RMODE!=='fill');
   var html='';
   if(RMODE==='fill'){
-    $('srs-intro').textContent='Mỗi phần 20 câu. Đọc nghĩa tiếng Việt, gõ từ còn thiếu vào chỗ trống. Trả lời đúng liên tiếp 2 lần (không dùng gợi ý) thì tính là đã nhớ. Câu sai sẽ được hỏi lại ngay trong lượt.';
-    $('srs-legend').innerHTML='<span><b class="c-rev">Số xanh</b> câu đã nhớ trên tổng số câu của phần</span>';
-    GROUPS.forEach(function(gn,gi){var ids=idsOf(gi),m=ids.reduce(function(a,id){return a+fmastered(id);},0);
-      html+='<button class="deck" data-g="'+gi+'"><span class="dn">'+esc(gn)+'</span><span class="cnt"><span class="c-rev'+(m?'':' z')+'">'+m+'</span><span class="c-new">/'+ids.length+'</span></span></button>';});
-    var al=idsOf('all'),am=al.reduce(function(a,id){return a+fmastered(id);},0);
-    html+='<button class="deck all" data-g="all"><span class="dn">20 câu yếu nhất từ mọi phần</span><span class="cnt"><span class="c-rev'+(am?'':' z')+'">'+am+'</span><span class="c-new">/'+al.length+'</span></span></button>';
+    $('srs-intro').textContent=FSCOPE==='wrong'
+      ?'Chỉ ôn những từ anh đã làm sai. Một từ rời khỏi danh sách sai khi anh điền đúng 3 lần liên tiếp (không dùng gợi ý). Từ đã tick "Đã thuộc" sẽ không bị hỏi lại.'
+      :'Học cả: hỏi toàn bộ 20 từ của phần, kể cả từ đã tick "Đã thuộc". Từ làm sai sẽ tự vào danh sách "Từ sai" để ôn riêng.';
+    $('srs-legend').innerHTML='<span><b class="c-lrn">Số đỏ</b> từ đang sai</span><span><b class="c-rev">Số xanh</b> từ đã tick Đã thuộc</span>';
+    GROUPS.forEach(function(gn,gi){var c=fcounts(idsOf(gi));
+      html+='<button class="deck" data-g="'+gi+'"><span class="dn">'+esc(gn)+'</span><span class="cnt">'+cnum(c.w,'c-lrn')+cnum(c.k,'c-rev')+'</span></button>';});
+    var ac=fcounts(idsOf('all'));
+    html+='<button class="deck all" data-g="all"><span class="dn">'+(FSCOPE==='wrong'?'Tất cả từ sai của mọi phần':'20 từ yếu nhất từ mọi phần')+'</span><span class="cnt">'+cnum(ac.w,'c-lrn')+cnum(ac.k,'c-rev')+'</span></button>';
   }else{
     $('srs-intro').textContent='Mỗi phần 20 thẻ. Xem mặt trước, tự nhớ, bấm hiện đáp án rồi tự chấm. Thẻ nhớ kém sẽ quay lại sớm, thẻ nhớ tốt được giãn ra nhiều ngày sau.';
     $('srs-legend').innerHTML='<span><b class="c-new">Xanh dương</b> thẻ mới</span><span><b class="c-lrn">Đỏ</b> đang học</span><span><b class="c-rev">Xanh lá</b> đến hạn ôn</span>';
@@ -736,6 +747,8 @@ function renderDecks(){
   }
   el.innerHTML=html;
 }
+$('fscope').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;
+  FSCOPE=b.getAttribute('data-s')==='wrong'?'wrong':'all';try{localStorage.setItem('gtbn_fscope',FSCOPE);}catch(x){}renderDecks();});
 $('rmode').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;
   RMODE=b.getAttribute('data-m')==='fill'?'fill':'anki';try{localStorage.setItem('gtbn_rmode',RMODE);}catch(x){}renderDecks();});
 $('decks').addEventListener('click',function(e){var b=e.target.closest('.deck');if(!b)return;
@@ -881,12 +894,24 @@ function mkFill(it){
 }
 function fnorm(x){return String(x).toLowerCase().replace(/[’]/g,"'").replace(/-/g,' ').replace(/[^a-z0-9' ]/g,'').replace(/\s+/g,' ').trim().replace(/ /g,'');}
 var F=null;
+function shuf(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=a[i];a[i]=a[j];a[j]=t;}return a;}
 function startFill(g){
-  var ids=idsOf(g);
-  if(g==='all'){ids=ids.slice().sort(function(a,b){var sa=(fillst[a]||{s:0}).s,sb=(fillst[b]||{s:0}).s;return sa-sb||Math.random()-.5;}).slice(0,20);}
-  ids=ids.slice();for(var i=ids.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1)),t=ids[i];ids[i]=ids[j];ids[j]=t;}
-  F={g:g,q:ids.map(function(id){return mkFill(ITEMS[id]);}),total:ids.length,i:0,hint:0,used:false,done:false,right:0,wrong:0,firstTry:{}};
-  show('fill');fRender();
+  var ids=idsOf(g).slice();
+  if(FSCOPE==='wrong')ids=ids.filter(isWeak);
+  else if(g==='all')ids=ids.filter(function(id){return !isKnown(id);});
+  ids=shuf(ids);
+  if(g==='all')ids=ids.sort(function(a,b){return fcnt(a)-fcnt(b);}).slice(0,20);
+  F={g:g,scope:FSCOPE,q:ids.map(function(id){return mkFill(ITEMS[id]);}),i:0,hint:0,used:false,done:false,wrong:0,firstTry:{}};
+  show('fill');
+  if(!F.q.length)return fEmpty();
+  fRender();
+}
+function fEmpty(){
+  $('f-bar').style.width='0%';$('f-count').textContent='';
+  $('f-body').innerHTML='<div class="rdone"><h2>Chưa có từ sai nào</h2><p>Phần này hiện không có từ nào cần ôn lại. Anh có thể chọn Học cả để điền toàn bộ.</p>'+
+    '<button class="btn" id="f-all">Học cả phần này</button><button class="btn sec2" id="f-home">Về trang chính</button></div>';
+  $('f-all').onclick=function(){var g=F.g;FSCOPE='all';try{localStorage.setItem('gtbn_fscope','all');}catch(e){}startFill(g);};
+  $('f-home').onclick=function(){F=null;renderHome();show('home');};
 }
 function fRender(){
   var b=$('f-body');
@@ -894,12 +919,13 @@ function fRender(){
   var q=F.q[F.i];F.hint=0;F.used=false;F.done=false;
   $('f-bar').style.width=Math.round(100*F.i/F.q.length)+'%';
   $('f-count').textContent=(F.i+1)+'/'+F.q.length;
-  b.innerHTML='<div class="fq"><div class="qlabel">Điền từ còn thiếu</div><div class="fvi">'+esc(q.vi)+'</div>'+(q.term?'<div class="fterm">Từ cần điền có nghĩa: <b>'+esc(q.term)+'</b></div>':'')+
+  b.innerHTML='<div class="fq"><div class="qlabel">Điền từ còn thiếu'+(F.scope==='wrong'?' · ôn từ sai':'')+'</div><div class="fvi">'+esc(q.vi)+'</div>'+(q.term?'<div class="fterm">Từ cần điền có nghĩa: <b>'+esc(q.term)+'</b></div>':'')+
     '<div class="fsent">'+esc(q.pre)+'<span class="blank" id="f-blank">'+'&nbsp;'.repeat(3)+'</span>'+esc(q.post)+'</div>'+
     '<div class="fhint" id="f-hint">'+(q.ans.length+' chữ cái')+'</div>'+
     '<input class="fin" id="f-in" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="Gõ từ còn thiếu">'+
     '<div id="f-msg" class="fmsg"></div>'+
-    '<div class="fact" id="f-act"><button class="btn" id="f-ok" style="flex-basis:100%">Kiểm tra</button><button class="btn sec2" id="f-hbtn">Gợi ý</button><button class="btn sec2" id="f-skip">Không nhớ</button></div></div>';
+    '<div class="fact" id="f-act"><button class="btn" id="f-ok" style="flex-basis:100%">Kiểm tra</button><button class="btn sec2" id="f-hbtn">Gợi ý</button><button class="btn sec2" id="f-skip">Không nhớ</button></div>'+
+    '<label class="fknown"><input type="checkbox" id="f-known"'+(isKnown(q.id)?' checked':'')+'><span>Đã thuộc, không hỏi lại nữa</span></label></div>';
   var inp=$('f-in');try{inp.focus({preventScroll:true});}catch(e){}
 }
 function fHint(){if(F.done)return;var q=F.q[F.i];F.used=true;F.hint=Math.min(q.ans.length-1,F.hint+1);
@@ -913,42 +939,58 @@ function fReveal(good){
   $('f-act').innerHTML='<button class="btn" id="f-next">Tiếp tục</button>';
   $('f-next').focus();
 }
+function fRequeue(q){if(isKnown(q.id))return;F.q.splice(Math.min(F.q.length,F.i+5),0,Object.assign({},q));}
+/* đúng: tăng chuỗi (không tính nếu dùng gợi ý); đủ 3 lần liên tiếp thì ra khỏi danh sách sai. sai: chuỗi về 0 và vào danh sách sai */
 function fApply(id,good){
-  var st=fillst[id]||{s:0,n:0};st.n++;
-  if(good&&!F.used&&!F.firstTry.hasOwnProperty(id)){st.s=(st.s||0)+1;}
-  else if(!good){st.s=0;}
+  var st=fillst[id]||(fillst[id]={s:0,n:0,w:0,k:0});st.n++;
+  if(good){if(!F.used)st.s=(st.s||0)+1;if(st.s>=3)st.w=0;}
+  else{st.s=0;st.w=1;}
   if(!F.firstTry.hasOwnProperty(id))F.firstTry[id]=good&&!F.used;
-  fillst[id]=st;fsave();
+  fsave();
 }
 function fCheck(){
   if(F.done)return;var q=F.q[F.i],v=fnorm($('f-in').value);if(!v)return;
   var okSet=[q.ans].concat(q.alts).map(fnorm),good=okSet.indexOf(v)>=0;
-  if(good){F.right++;fApply(q.id,true);$('f-msg').className='fmsg ok';$('f-msg').textContent='Chính xác!';fReveal(true);}
-  else{
-    F.wrong++;fApply(q.id,false);$('f-msg').className='fmsg bad';$('f-msg').textContent='Chưa đúng. Đáp án: '+q.ans;fReveal(false);
-    F.q.splice(Math.min(F.q.length,F.i+5),0,Object.assign({},q)); // hỏi lại sau vài câu
+  fApply(q.id,good);
+  if(good){
+    $('f-msg').className='fmsg ok';
+    var st=fillst[q.id];
+    if(F.scope==='wrong'&&st.s<3){$('f-msg').textContent='Chính xác! Đúng liên tiếp '+st.s+'/3 lần, từ này sẽ hỏi lại.';fRequeue(q);}
+    else $('f-msg').textContent=st.s>=3?'Chính xác! Từ này đã đủ 3 lần liên tiếp.':'Chính xác!';
+    fReveal(true);
+  }else{
+    F.wrong++;$('f-msg').className='fmsg bad';$('f-msg').textContent='Chưa đúng. Đáp án: '+q.ans;fReveal(false);fRequeue(q);
   }
 }
 function fSkip(){
   if(F.done)return;var q=F.q[F.i];
-  var tv=fnorm($('f-in').value);if(tv&&[q.ans].concat(q.alts).map(fnorm).indexOf(tv)>=0)return fCheck();F.wrong++;fApply(q.id,false);
-  $('f-msg').className='fmsg bad';$('f-msg').textContent='Đáp án: '+q.ans;fReveal(false);
-  F.q.splice(Math.min(F.q.length,F.i+5),0,Object.assign({},q));
+  var tv=fnorm($('f-in').value);if(tv&&[q.ans].concat(q.alts).map(fnorm).indexOf(tv)>=0)return fCheck();
+  F.wrong++;fApply(q.id,false);
+  $('f-msg').className='fmsg bad';$('f-msg').textContent='Đáp án: '+q.ans;fReveal(false);fRequeue(q);
 }
 function fNext(){F.i++;fRender();}
 function fDone(){
-  var n=F.total,first=0;Object.keys(F.firstTry).forEach(function(k){if(F.firstTry[k])first++;});
+  var ids=Object.keys(F.firstTry),n=ids.length,first=0,mem=0;
+  ids.forEach(function(k){if(F.firstTry[k])first++;if(fcnt(k)>=3)mem++;});
+  var left=idsOf(F.g).filter(isWeak).length;
   $('f-bar').style.width='100%';$('f-count').textContent=F.q.length+'/'+F.q.length;
-  var mem=Object.keys(F.firstTry).reduce(function(a,k){return a+fmastered(k);},0);
-  $('f-body').innerHTML='<div class="rdone"><h2>Hoàn thành lượt điền từ</h2><div class="bigpct">'+Math.round(100*first/n)+'%</div>'+
-    '<p>'+first+' trên '+n+' câu đúng ngay lần đầu, '+F.wrong+' lần trả lời sai hoặc bỏ qua.</p><p>Đã nhớ vững (đúng liên tiếp 2 lần): '+mem+'/'+n+' câu trong lượt này.</p>'+
-    '<button class="btn" id="f-again">Điền lại phần này</button><button class="btn sec2" id="f-home">Về trang chính</button></div>';
-  $('f-again').onclick=function(){var g=F.g;startFill(g);};
+  $('f-body').innerHTML='<div class="rdone"><h2>Hoàn thành lượt điền từ</h2><div class="bigpct">'+(n?Math.round(100*first/n):0)+'%</div>'+
+    '<p>'+first+' trên '+n+' từ đúng ngay lần đầu, '+F.wrong+' lần trả lời sai hoặc bỏ qua.</p>'+
+    '<p>'+(left?'Còn '+left+' từ trong danh sách sai cần ôn tiếp.':'Danh sách từ sai của phần này đã trống.')+'</p>'+
+    (left?'<button class="btn" id="f-wrong">Ôn tiếp từ sai</button>':'')+
+    '<button class="btn sec2" id="f-again">Học cả phần này</button><button class="btn sec2" id="f-home">Về trang chính</button></div>';
+  var g=F.g;
+  if(left)$('f-wrong').onclick=function(){FSCOPE='wrong';try{localStorage.setItem('gtbn_fscope','wrong');}catch(e){}startFill(g);};
+  $('f-again').onclick=function(){FSCOPE='all';try{localStorage.setItem('gtbn_fscope','all');}catch(e){}startFill(g);};
   $('f-home').onclick=function(){F=null;renderHome();show('home');};
 }
 $('f-body').addEventListener('click',function(e){var t=e.target;if(!F)return;
   if(t.id==='f-ok')fCheck();else if(t.id==='f-hbtn')fHint();else if(t.id==='f-skip')fSkip();else if(t.id==='f-next')fNext();});
-$('f-body').addEventListener('keydown',function(e){if(!F||e.key!=='Enter'||e.target.tagName==='BUTTON')return;e.preventDefault();if(!F.done)fCheck();});
+$('f-body').addEventListener('change',function(e){if(!F||e.target.id!=='f-known')return;
+  var q=F.q[F.i];if(!q)return;var st=fillst[q.id]||(fillst[q.id]={s:0,n:0,w:0,k:0});
+  st.k=e.target.checked?1:0;fsave();
+  if(st.k){F.q=F.q.filter(function(x,idx){return idx<=F.i||x.id!==q.id;});}});
+$('f-body').addEventListener('keydown',function(e){if(!F||e.key!=='Enter'||e.target.tagName==='BUTTON'||e.target.id==='f-known')return;e.preventDefault();if(!F.done)fCheck();});
 $('f-close').addEventListener('click',function(){F=null;renderHome();show('home');});
 
 renderHome();
